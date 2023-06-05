@@ -1,51 +1,116 @@
-# recipe_manager.py
+import sqlite3
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Table, ForeignKey
-from sqlalchemy.orm import relationship
+# Connect to the SQLite database
+conn = sqlite3.connect('recipes.db')
+cursor = conn.cursor()
 
-engine = create_engine('sqlite:///recipes.db')
-Session = sessionmaker(bind=engine)
-session = Session()
+# Create the recipes table if it doesn't exist
+cursor.execute('''CREATE TABLE IF NOT EXISTS recipes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    ingredients TEXT,
+                    instructions TEXT,
+                    cooking_time INTEGER
+                )''')
+conn.commit()
 
-Base = declarative_base()
+# Function to add a new recipe
+def add_recipe():
+    name = input("Enter the recipe name: ")
+    ingredients = input("Enter the ingredients (comma-separated): ")
+    instructions = input("Enter the instructions: ")
+    cooking_time = int(input("Enter the cooking time (in minutes): "))
 
-class Recipe(Base):
-    __tablename__ = 'recipes'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    instructions = Column(String)
-    ingredients = relationship('Ingredient', secondary='recipe_ingredients')
+    # Insert the recipe into the database
+    cursor.execute('''INSERT INTO recipes (name, ingredients, instructions, cooking_time)
+                      VALUES (?, ?, ?, ?)''', (name, ingredients, instructions, cooking_time))
+    conn.commit()
+    print("Recipe added successfully!")
 
-class Ingredient(Base):
-    __tablename__ = 'ingredients'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
+# Function to display all recipes
+def display_recipes():
+    cursor.execute("SELECT * FROM recipes")
+    recipes = cursor.fetchall()
 
-class RecipeIngredient(Base):
-    __tablename__ = 'recipe_ingredients'
-    recipe_id = Column(Integer, ForeignKey('recipes.id'), primary_key=True)
-    ingredient_id = Column(Integer, ForeignKey('ingredients.id'), primary_key=True)
+    if len(recipes) == 0:
+        print("No recipes found.")
+    else:
+        for recipe in recipes:
+            print("Recipe ID:", recipe[0])
+            print("Name:", recipe[1])
+            print("Ingredients:", recipe[2])
+            print("Instructions:", recipe[3])
+            print("Cooking Time:", recipe[4], "minutes")
+            print("------------------------------")
 
-class RecipeManager:
-    @staticmethod
-    def add_recipe(name, ingredients, instructions):
-        recipe = Recipe(name=name, instructions=instructions)
-        for ingredient_name in ingredients.split(','):
-            ingredient = session.query(Ingredient).filter_by(name=ingredient_name.strip()).first()
-            if not ingredient:
-                ingredient = Ingredient(name=ingredient_name.strip())
-            recipe.ingredients.append(ingredient)
-        session.add(recipe)
-        session.commit()
+# Function to search for recipes by name
+def search_recipes():
+    keyword = input("Enter a keyword to search for: ")
+    query = "SELECT * FROM recipes WHERE name LIKE ?"
+    cursor.execute(query, ('%' + keyword + '%',))
+    recipes = cursor.fetchall()
 
-    @staticmethod
-    def get_recipe(name):
-        return session.query(Recipe).filter_by(name=name).first()
+    if len(recipes) == 0:
+        print("No recipes found.")
+    else:
+        for recipe in recipes:
+            print("Recipe ID:", recipe[0])
+            print("Name:", recipe[1])
+            print("Ingredients:", recipe[2])
+            print("Instructions:", recipe[3])
+            print("Cooking Time:", recipe[4], "minutes")
+            print("------------------------------")
 
-    @staticmethod
-    def search_recipes(ingredient):
-        return session.query(Recipe).join(Recipe.ingredients).filter(Ingredient.name == ingredient).all()
+# Function to update a recipe
+def update_recipe():
+    recipe_id = int(input("Enter the recipe ID to update: "))
+    new_name = input("Enter the new recipe name: ")
+    new_ingredients = input("Enter the new ingredients (comma-separated): ")
+    new_instructions = input("Enter the new instructions: ")
+    new_cooking_time = int(input("Enter the new cooking time (in minutes): "))
+
+    # Update the recipe in the database
+    cursor.execute('''UPDATE recipes SET name=?, ingredients=?, instructions=?, cooking_time=?
+                      WHERE id=?''', (new_name, new_ingredients, new_instructions, new_cooking_time, recipe_id))
+    conn.commit()
+    print("Recipe updated successfully!")
+
+# Function to delete a recipe
+def delete_recipe():
+    recipe_id = int(input("Enter the recipe ID to delete: "))
+
+    # Delete the recipe from the database
+    cursor.execute("DELETE FROM recipes WHERE id=?", (recipe_id,))
+    conn.commit()
+    print("Recipe deleted successfully!")
+
+# Main menu loop
+while True:
+    print("\n-------- Recipe Management CLI --------")
+    print("1. Add a new recipe")
+    print("2. Display all recipes")
+    print("3. Search for recipes")
+    print("4. Update a recipe")
+    print("5. Delete a recipe")
+    print("0. Exit")
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        add_recipe()
+    elif choice == "2":
+        display_recipes()
+    elif choice == "3":
+        search_recipes()
+    elif choice == "4":
+        update_recipe()
+    elif choice == "5":
+        delete_recipe()
+    elif choice == "0":
+        break
+    else:
+        print("Invalid choice. Please try again.")
+
+# Close the database connection
+conn.close()
+
 
