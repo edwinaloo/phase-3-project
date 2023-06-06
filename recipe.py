@@ -4,15 +4,7 @@ import sqlite3
 conn = sqlite3.connect('recipes.db')
 cursor = conn.cursor()
 
-# Create the recipes table if it doesn't exist
-cursor.execute('''CREATE TABLE IF NOT EXISTS recipes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT,
-                    ingredients TEXT,
-                    instructions TEXT,
-                    cooking_time INTEGER
-                )''')
-conn.commit()
+
 
 # Create the reviews table if it doesn't exist
 cursor.execute('''CREATE TABLE IF NOT EXISTS reviews (
