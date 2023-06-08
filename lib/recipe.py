@@ -121,8 +121,8 @@ def delete_recipe():
 
 # Function to search for recipes by name
 def search_recipes():
-    keyword = input("Recipe ID")
-    query = "SELECT * FROM recipes WHERE id IN (SELECT id FROM search_terms WHERE term LIKE ?)"
+    keyword = input("Enter a keyword to search for: ")
+    query = "SELECT * FROM recipes WHERE id IN (SELECT recipe_id FROM search_terms WHERE term LIKE ?)"
     cursor.execute(query, ('%' + keyword.lower() + '%',))
     recipes = cursor.fetchall()
 
@@ -182,5 +182,6 @@ while True:
 
 # Close the database connection
 conn.close()
+
 
 

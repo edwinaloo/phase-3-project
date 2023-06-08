@@ -27,24 +27,3 @@ def add_review():
     conn.commit()
     print("Review added successfully!")
 
-# Main menu loop
-while True:
-    print("\n-------- Recipe Management CLI --------")
-    print("1. Add a new recipe")
-    print("2. Display all recipes")
-    print("3. Search for recipes")
-    print("4. Update a recipe")
-    print("5. Delete a recipe")
-    print("6. Add a review")
-    print("0. Exit")
-    choice = input("Enter your choice: ")
-
-    if choice == "6":
-        add_review()
-    elif choice == "0":
-        break
-    else:
-        print("Invalid choice. Please try again.")
-
-# Close the database connection
-conn.close()
